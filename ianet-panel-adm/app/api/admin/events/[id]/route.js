@@ -6,10 +6,11 @@ import { eventSchema } from "@/lib/validations"
 
 export async function GET(request, { params }) {
   try {
+    const { id } = await params
     await requireAuth()
     await dbConnect()
 
-    const event = await Event.findById(params.id).populate("assignedStaff", "name email roleVisible")
+    const event = await Event.findById(id).populate("assignedStaff", "name email roleVisible")
 
     if (!event) {
       return NextResponse.json({ error: "Evento no encontrado" }, { status: 404 })
@@ -23,6 +24,7 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
+    const { id } = await params
     await requireAuth()
     await dbConnect()
 
@@ -30,7 +32,7 @@ export async function PUT(request, { params }) {
     const validated = eventSchema.parse(body)
 
     const event = await Event.findByIdAndUpdate(
-      params.id,
+      id,
       {
         ...validated,
         date: new Date(validated.date),
@@ -53,10 +55,11 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
+    const { id } = await params
     await requireAuth()
     await dbConnect()
 
-    const event = await Event.findByIdAndDelete(params.id)
+    const event = await Event.findByIdAndDelete(id)
 
     if (!event) {
       return NextResponse.json({ error: "Evento no encontrado" }, { status: 404 })

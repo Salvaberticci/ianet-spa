@@ -6,10 +6,11 @@ import { staffSchema } from "@/lib/validations"
 
 export async function GET(request, { params }) {
   try {
+    const { id } = await params
     await requireAuth()
     await dbConnect()
 
-    const staff = await Staff.findById(params.id)
+    const staff = await Staff.findById(id)
 
     if (!staff) {
       return NextResponse.json({ error: "Personal no encontrado" }, { status: 404 })
@@ -23,13 +24,14 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
+    const { id } = await params
     await requireAuth()
     await dbConnect()
 
     const body = await request.json()
     const validated = staffSchema.parse(body)
 
-    const staff = await Staff.findByIdAndUpdate(params.id, validated, {
+    const staff = await Staff.findByIdAndUpdate(id, validated, {
       new: true,
       runValidators: true,
     })
@@ -46,10 +48,11 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
+    const { id } = await params
     await requireAuth()
     await dbConnect()
 
-    const staff = await Staff.findByIdAndDelete(params.id)
+    const staff = await Staff.findByIdAndDelete(id)
 
     if (!staff) {
       return NextResponse.json({ error: "Personal no encontrado" }, { status: 404 })

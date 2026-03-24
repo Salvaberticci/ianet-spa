@@ -6,10 +6,11 @@ import { inventorySchema } from "@/lib/validations"
 
 export async function GET(request, { params }) {
   try {
+    const { id } = await params
     await requireAuth()
     await dbConnect()
 
-    const item = await Inventory.findById(params.id)
+    const item = await Inventory.findById(id)
 
     if (!item) {
       return NextResponse.json({ error: "Ítem no encontrado" }, { status: 404 })
@@ -23,13 +24,14 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
+    const { id } = await params
     await requireAuth()
     await dbConnect()
 
     const body = await request.json()
     const validated = inventorySchema.parse(body)
 
-    const item = await Inventory.findByIdAndUpdate(params.id, validated, {
+    const item = await Inventory.findByIdAndUpdate(id, validated, {
       new: true,
       runValidators: true,
     })
@@ -46,10 +48,11 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
+    const { id } = await params
     await requireAuth()
     await dbConnect()
 
-    const item = await Inventory.findByIdAndDelete(params.id)
+    const item = await Inventory.findByIdAndDelete(id)
 
     if (!item) {
       return NextResponse.json({ error: "Ítem no encontrado" }, { status: 404 })

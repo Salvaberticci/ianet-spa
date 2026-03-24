@@ -20,7 +20,8 @@ async function getStaff() {
 
 export default async function EditarCitaPage({ params }) {
   await requireAuth()
-  const [appointment, staff] = await Promise.all([getAppointment(params.id), getStaff()])
+  const { id } = await params
+  const [appointment, staff] = await Promise.all([getAppointment(id), getStaff()])
 
   if (!appointment) {
     notFound()

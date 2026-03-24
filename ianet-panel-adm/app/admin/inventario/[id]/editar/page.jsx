@@ -13,7 +13,8 @@ async function getInventoryItem(id) {
 
 export default async function EditarInventarioPage({ params }) {
   await requireAuth()
-  const item = await getInventoryItem(params.id)
+  const resolvedParams = await params
+  const item = await getInventoryItem(resolvedParams.id)
 
   if (!item) {
     notFound()

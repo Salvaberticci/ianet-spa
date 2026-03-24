@@ -13,7 +13,8 @@ async function getNews(id) {
 
 export default async function EditarNoticiaPage({ params }) {
   await requireAuth()
-  const news = await getNews(params.id)
+  const resolvedParams = await params
+  const news = await getNews(resolvedParams.id)
 
   if (!news) {
     notFound()

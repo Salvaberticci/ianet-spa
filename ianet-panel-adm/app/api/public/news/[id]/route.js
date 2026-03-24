@@ -4,9 +4,8 @@ import News from "@/models/News"
 
 export async function GET(request, { params }) {
   try {
+    const { id } = await params
     await dbConnect()
-
-    const { id } = params
 
     const news = await News.findOne({ 
       _id: id, 

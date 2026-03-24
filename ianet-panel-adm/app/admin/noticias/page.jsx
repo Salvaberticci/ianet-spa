@@ -43,7 +43,8 @@ async function getNews(searchParams) {
 
 export default async function NoticiasPage({ searchParams }) {
   await requireAuth()
-  const { news, pagination } = await getNews(searchParams)
+  const resolvedSearchParams = await searchParams
+  const { news, pagination } = await getNews(resolvedSearchParams)
 
   return (
     <div>

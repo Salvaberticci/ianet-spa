@@ -16,9 +16,12 @@ async function getAppointmentsByEmail(email) {
   return JSON.parse(JSON.stringify(appointments))
 }
 
+// Assuming getData is a new function that needs to be defined or imported
+// For the purpose of this edit, we'll assume it's a placeholder or needs to be added elsewhere.
+// If getData is not defined, this will cause a runtime error.
 export default async function HistoriaUsuarioPage({ params }) {
   await requireAuth()
-  const email = params.email
+  const { email } = await params
   const appointments = await getAppointmentsByEmail(email)
 
   const patientName = appointments[0]?.patientName || "Paciente"

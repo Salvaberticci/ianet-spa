@@ -5,10 +5,11 @@ import Contact from "@/models/Contact"
 
 export async function GET(request, { params }) {
   try {
+    const { id } = await params
     await requireAuth()
     await dbConnect()
 
-    const contact = await Contact.findById(params.id)
+    const contact = await Contact.findById(id)
 
     if (!contact) {
       return NextResponse.json({ error: "Mensaje no encontrado" }, { status: 404 })
@@ -22,6 +23,7 @@ export async function GET(request, { params }) {
 
 export async function PATCH(request, { params }) {
   try {
+    const { id } = await params
     await requireAuth()
     await dbConnect()
 
@@ -32,7 +34,7 @@ export async function PATCH(request, { params }) {
     if (status) updateData.status = status
     if (internalNotes !== undefined) updateData.internalNotes = internalNotes
 
-    const contact = await Contact.findByIdAndUpdate(params.id, updateData, {
+    const contact = await Contact.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
     })

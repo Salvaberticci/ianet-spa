@@ -5,10 +5,11 @@ import Appointment from "@/models/Appointment"
 
 export async function GET(request, { params }) {
   try {
+    const { id } = await params
     await requireAuth()
     await dbConnect()
 
-    const appointment = await Appointment.findById(params.id).populate("assignedStaff", "name email roleVisible")
+    const appointment = await Appointment.findById(id).populate("assignedStaff", "name email roleVisible")
 
     if (!appointment) {
       return NextResponse.json({ error: "Cita no encontrada" }, { status: 404 })
@@ -22,6 +23,7 @@ export async function GET(request, { params }) {
 
 export async function PATCH(request, { params }) {
   try {
+    const { id } = await params
     await requireAuth()
     await dbConnect()
 
@@ -42,7 +44,7 @@ export async function PATCH(request, { params }) {
 
       // Validación 2: No permitir dos citas a la misma hora (excluyendo la cita actual)
       const existingAppointment = await Appointment.findOne({
-        _id: { $ne: params.id },
+        _id: { $ne: id },
         dateTime: appointmentDate,
         status: { $nin: ["cancelada"] },
       })
@@ -55,7 +57,7 @@ export async function PATCH(request, { params }) {
       }
     }
 
-    const appointment = await Appointment.findByIdAndUpdate(params.id, body, {
+    const appointment = await Appointment.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,
     })
@@ -72,10 +74,11 @@ export async function PATCH(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
+    const { id } = await params
     await requireAuth()
     await dbConnect()
 
-    const appointment = await Appointment.findByIdAndDelete(params.id)
+    const appointment = await Appointment.findByIdAndDelete(id)
 
     if (!appointment) {
       return NextResponse.json({ error: "Cita no encontrada" }, { status: 404 })

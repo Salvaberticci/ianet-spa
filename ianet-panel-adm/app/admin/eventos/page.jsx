@@ -35,7 +35,8 @@ async function getEvents(searchParams) {
 export default async function EventosPage({ searchParams }) {
   await requireAuth()
   if (!isFeatureEnabled("events")) return notFound()
-  const { events, pagination } = await getEvents(searchParams)
+  const resolvedSearchParams = await searchParams
+  const { events, pagination } = await getEvents(resolvedSearchParams)
 
   return (
     <div>

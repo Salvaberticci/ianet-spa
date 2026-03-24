@@ -13,7 +13,8 @@ async function getContact(id) {
 
 export default async function ContactDetailPage({ params }) {
   await requireAuth()
-  const contact = await getContact(params.id)
+  const resolvedParams = await params
+  const contact = await getContact(resolvedParams.id)
 
   if (!contact) {
     notFound()

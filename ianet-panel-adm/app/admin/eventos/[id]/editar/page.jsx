@@ -20,7 +20,8 @@ async function getStaff() {
 
 export default async function EditarEventoPage({ params }) {
   await requireAuth()
-  const [event, staff] = await Promise.all([getEvent(params.id), getStaff()])
+  const { id } = await params
+  const [event, staff] = await Promise.all([getEvent(id), getStaff()])
 
   if (!event) {
     notFound()

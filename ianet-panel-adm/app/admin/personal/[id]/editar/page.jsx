@@ -13,7 +13,8 @@ async function getStaff(id) {
 
 export default async function EditarPersonalPage({ params }) {
   await requireAuth()
-  const staff = await getStaff(params.id)
+  const resolvedParams = await params
+  const staff = await getStaff(resolvedParams.id)
 
   if (!staff) {
     notFound()

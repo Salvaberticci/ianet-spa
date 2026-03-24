@@ -58,7 +58,8 @@ async function getPatients(searchParams) {
 
 export default async function HistoriasPage({ searchParams }) {
   await requireAuth()
-  const { patients, pagination } = await getPatients(searchParams)
+  const resolvedSearchParams = await searchParams
+  const { patients, pagination } = await getPatients(resolvedSearchParams)
 
   return (
     <div>

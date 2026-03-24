@@ -6,10 +6,11 @@ import { newsSchema } from "@/lib/validations"
 
 export async function GET(request, { params }) {
   try {
+    const { id } = await params
     await requireAuth()
     await dbConnect()
 
-    const news = await News.findById(params.id).populate("author", "name email")
+    const news = await News.findById(id).populate("author", "name email")
 
     if (!news) {
       return NextResponse.json({ error: "Noticia no encontrada" }, { status: 404 })
@@ -23,13 +24,14 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
+    const { id } = await params
     await requireAuth()
     await dbConnect()
 
     const body = await request.json()
     const validated = newsSchema.parse(body)
 
-    const news = await News.findByIdAndUpdate(params.id, validated, {
+    const news = await News.findByIdAndUpdate(id, validated, {
       new: true,
       runValidators: true,
     })
@@ -46,10 +48,11 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
+    const { id } = await params
     await requireAuth()
     await dbConnect()
 
-    const news = await News.findByIdAndDelete(params.id)
+    const news = await News.findByIdAndDelete(id)
 
     if (!news) {
       return NextResponse.json({ error: "Noticia no encontrada" }, { status: 404 })
