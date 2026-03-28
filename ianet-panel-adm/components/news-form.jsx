@@ -71,7 +71,8 @@ export default function NewsForm({ initialData = null }) {
         })
 
         if (!uploadRes.ok) {
-          throw new Error("Error al subir la imagen")
+          const errorData = await uploadRes.json()
+          throw new Error(errorData.error || "Error al subir la imagen")
         }
 
         const uploadData = await uploadRes.json()
