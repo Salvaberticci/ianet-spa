@@ -16,14 +16,22 @@ export async function POST(request) {
     }
 
     // 3. Subir a Vercel Blob
-    // El token BLOB_READ_WRITE_TOKEN debe estar en las variables de entorno
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      console.error("Falta BLOB_READ_WRITE_TOKEN en las variables de entorno.")
+      return NextResponse.json({ 
+        error: "Servicio de almacenamiento no configurado. Asegúrate de conectar el Blob Store en Vercel." 
+      }, { status: 500 })
+    }
+
     const blob = await put(file.name, file, {
       access: "public",
     })
 
     return NextResponse.json(blob)
   } catch (error) {
-    console.error("Error al subir archivo:", error)
-    return NextResponse.json({ error: error.message || "Error al subir el archivo" }, { status: 500 })
+    console.error("Error detallado al subir archivo:", error)
+    return NextResponse.json({ 
+      error: error.message || "Error al subir el archivo" 
+    }, { status: 500 })
   }
 }
