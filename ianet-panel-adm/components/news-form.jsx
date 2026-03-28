@@ -1,12 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { Upload, X, Image as ImageIcon, Loader2 } from "lucide-react"
 
 export default function NewsForm({ initialData = null }) {
   const router = useRouter()
+  const fileInputRef = useRef(null)
   const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState(initialData?.imageUrl || null)
   const [formData, setFormData] = useState({
     title: initialData?.title || "",
     summary: initialData?.summary || "",
@@ -24,18 +29,66 @@ export default function NewsForm({ initialData = null }) {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("La imagen es demasiado grande (máximo 5MB)")
+        return
+      }
+      setImageFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const removeImage = () => {
+    setImageFile(null)
+    setImagePreview(null)
+    setFormData(prev => ({ ...prev, imageUrl: "" }))
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
 
     try {
+      let currentImageUrl = formData.imageUrl
+
+      // 1. Subir imagen si hay un archivo nuevo
+      if (imageFile) {
+        setUploading(true)
+        const uploadFormData = new FormData()
+        uploadFormData.append("file", imageFile)
+
+        const uploadRes = await fetch("/api/admin/upload", {
+          method: "POST",
+          body: uploadFormData,
+        })
+
+        if (!uploadRes.ok) {
+          throw new Error("Error al subir la imagen")
+        }
+
+        const uploadData = await uploadRes.json()
+        currentImageUrl = uploadData.url
+        setUploading(false)
+      }
+
       const url = initialData ? `/api/admin/news/${initialData._id}` : "/api/admin/news"
       const method = initialData ? "PUT" : "POST"
 
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          imageUrl: currentImageUrl
+        }),
       })
 
       if (res.ok) {
@@ -123,16 +176,53 @@ export default function NewsForm({ initialData = null }) {
         </div>
 
         <div>
-          <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-2">
-            URL de Imagen
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Imagen de la Noticia
           </label>
+          <div 
+            onClick={() => !imagePreview && fileInputRef.current?.click()}
+            className={`relative group h-40 border-2 border-dashed rounded-xl flex flex-col items-center justify-center transition-all ${
+              imagePreview ? "border-green-500 bg-green-50/10" : "border-gray-300 hover:border-green-500 hover:bg-green-50/50 cursor-pointer"
+            }`}
+          >
+            {imagePreview ? (
+              <div className="relative w-full h-full p-2">
+                <img 
+                  src={imagePreview} 
+                  alt="Preview" 
+                  className="w-full h-full object-cover rounded-lg"
+                />
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); removeImage(); }}
+                  className="absolute top-4 right-4 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-lg"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="p-3 bg-gray-100 rounded-full mb-2 group-hover:bg-green-100 transition-colors">
+                  <Upload className="w-6 h-6 text-gray-400 group-hover:text-green-600" />
+                </div>
+                <p className="text-sm text-gray-500 group-hover:text-green-600">Haz clic para subir imagen</p>
+                <p className="text-xs text-gray-400 mt-1">Sugerido: 1200x630px (máx 5MB)</p>
+              </>
+            )}
+            
+            {uploading && (
+              <div className="absolute inset-0 bg-white/80 rounded-xl flex flex-col items-center justify-center backdrop-blur-[1px] z-10">
+                <Loader2 className="w-8 h-8 text-green-600 animate-spin mb-2" />
+                <p className="text-sm font-medium text-gray-600">Subiendo imagen...</p>
+              </div>
+            )}
+          </div>
           <input
-            id="imageUrl"
-            name="imageUrl"
-            type="url"
-            value={formData.imageUrl}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="hidden"
           />
         </div>
 
