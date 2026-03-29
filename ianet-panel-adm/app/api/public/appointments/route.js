@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server"
 import dbConnect from "@/lib/mongodb"
 import Appointment from "@/models/Appointment"
+import Setting from "@/models/Setting"
 import { appointmentSchema } from "@/lib/validations"
+import { sendAppointmentNotificationEmail } from "@/lib/email"
 
 export async function POST(request) {
   try {
@@ -9,11 +11,53 @@ export async function POST(request) {
 
     const body = await request.json()
     const validated = appointmentSchema.parse(body)
+    const appointmentDate = new Date(validated.dateTime)
+
+    // ── VALIDACIÓN DE HORARIO ────────────────────────────────────────────────
+    // Lunes = 1, Martes = 2
+    const day = appointmentDate.getDay()
+    const hour = appointmentDate.getHours()
+    const minutes = appointmentDate.getMinutes()
+
+    if (day !== 1 && day !== 2) {
+      return NextResponse.json(
+        { error: "Las citas solo se pueden agendar los días Lunes y Martes." },
+        { status: 400 }
+      )
+    }
+
+    // Horario: 8:30 AM a 2:00 PM (14:00)
+    const minutesSinceMidnight = hour * 60 + minutes
+    const startLimit = 8 * 60 + 30 // 08:30
+    const endLimit = 14 * 60 // 14:00
+
+    if (minutesSinceMidnight < startLimit || minutesSinceMidnight >= endLimit) {
+      return NextResponse.json(
+        { error: "El horario de atención es de 8:30 AM a 2:00 PM." },
+        { status: 400 }
+      )
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     const appointment = await Appointment.create({
       ...validated,
-      dateTime: new Date(validated.dateTime),
+      dateTime: appointmentDate,
     })
+
+    // ── NOTIFICACIÓN POR EMAIL ───────────────────────────────────────────────
+    try {
+      const settings = await Setting.findOne({ key: "institutionalEmail" })
+      if (settings?.value) {
+        // Ejecutamos el envío sin esperar para no retrasar la respuesta al cliente
+        sendAppointmentNotificationEmail({
+          institutionalEmail: settings.value,
+          appointment: appointment.toObject(),
+        })
+      }
+    } catch (emailErr) {
+      console.error("Error al intentar obtener email institucional para aviso:", emailErr)
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     return NextResponse.json(
       {

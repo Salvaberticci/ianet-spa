@@ -1,9 +1,10 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut, useSession } from "next-auth/react"
-import { LayoutDashboard, Newspaper, MessageSquare, Calendar, Package, CalendarDays, Users, FileText, BarChart, LogOut, UserPlus } from "lucide-react"
+import { LayoutDashboard, Newspaper, MessageSquare, Calendar, Package, CalendarDays, Users, FileText, BarChart, LogOut, UserPlus, Settings } from "lucide-react"
 import Image from 'next/image'
 import { isFeatureEnabled } from "@/lib/featureFlags"
 
@@ -59,12 +60,38 @@ const menuItems = [
     icon: UserPlus,
     isAdminOnly: true,
   },
+  {
+    title: "Configuración",
+    href: "/admin/configuracion",
+    icon: Settings,
+    isAdminOnly: true,
+  },
 ]
 
 export default function Sidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
   const userRole = session?.user?.role
+  const [appointmentCount, setAppointmentCount] = useState(0)
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      try {
+        const res = await fetch("/api/admin/appointments/count")
+        if (res.ok) {
+          const data = await res.json()
+          setAppointmentCount(data.count)
+        }
+      } catch (error) {
+        console.error("Error al obtener conteo de citas:", error)
+      }
+    }
+
+    fetchCount()
+    // Refrescar cada 5 minutos
+    const interval = setInterval(fetchCount, 5 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: "/login" })
@@ -95,11 +122,18 @@ export default function Sidebar() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${isActive ? "bg-green-600 text-white" : "text-gray-700 hover:bg-gray-100"
+                    className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-colors ${isActive ? "bg-green-600 text-white" : "text-gray-700 hover:bg-gray-100"
                       }`}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span className="font-medium">{item.title}</span>
+                    <div className="flex items-center gap-3">
+                      <Icon className="w-5 h-5" />
+                      <span className="font-medium">{item.title}</span>
+                    </div>
+                    {item.title === "Citas" && appointmentCount > 0 && (
+                      <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                        {appointmentCount > 99 ? "99+" : appointmentCount}
+                      </span>
+                    )}
                   </Link>
                 </li>
               )

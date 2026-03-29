@@ -16,9 +16,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-// Helper: generates time slots from 08:00 to 14:00
+// Helper: generates time slots from 08:30 to 14:00
 const TIME_SLOTS = [
-  "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00"
+  "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00"
 ]
 
 export default function AppointmentForm({ initialData = null, staff = [] }) {
@@ -34,7 +34,7 @@ export default function AppointmentForm({ initialData = null, staff = [] }) {
     patientName: initialData?.patientName || "",
     patientEmail: initialData?.patientEmail || "",
     patientPhone: initialData?.patientPhone || "",
-    type: initialData?.type || "medica",
+    type: initialData?.type || "atencion-ciudadano",
     appointmentDate: initialDateObj,
     appointmentTime: initialTime,
     assignedStaff: initialData?.assignedStaff?._id || "",
@@ -192,8 +192,8 @@ export default function AppointmentForm({ initialData = null, staff = [] }) {
             onChange={handleChange}
             className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
           >
-            <option value="medica">Médica</option>
-            <option value="nutricional">Nutricional</option>
+            <option value="atencion-ciudadano">Atención al Ciudadano</option>
+            <option value="valoracion-nutricional">Valoración Nutricional</option>
           </select>
         </div>
 
@@ -225,15 +225,14 @@ export default function AppointmentForm({ initialData = null, staff = [] }) {
                 onSelect={handleDateSelect}
                 disabled={(date) =>
                   date < new Date(new Date().setHours(0, 0, 0, 0)) || // Past dates
-                  date.getDay() === 0 || // Sunday
-                  date.getDay() === 6    // Saturday
+                  (date.getDay() !== 1 && date.getDay() !== 2) // Monday or Tuesday only
                 }
                 initialFocus
                 locale={es}
               />
             </PopoverContent>
           </Popover>
-          <p className="mt-1 text-xs text-gray-500">🗓️ Solo lunes a viernes.</p>
+          <p className="mt-1 text-xs text-gray-500">🗓️ Solo Lunes y Martes.</p>
         </div>
 
         <div>
@@ -255,7 +254,7 @@ export default function AppointmentForm({ initialData = null, staff = [] }) {
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-gray-500">⏰ Horario: 8:00 AM – 2:00 PM.</p>
+          <p className="mt-1 text-xs text-gray-500">⏰ Horario: 8:30 AM – 2:00 PM.</p>
         </div>
 
         <div>

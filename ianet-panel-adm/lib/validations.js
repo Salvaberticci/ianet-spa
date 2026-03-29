@@ -22,7 +22,7 @@ export const appointmentSchema = z.object({
   patientName: z.string().min(1, "El nombre es requerido"),
   patientEmail: z.string().email("Email inválido"),
   patientPhone: z.string().min(1, "El teléfono es requerido"),
-  type: z.enum(["medica", "nutricional"]),
+  type: z.enum(["atencion-ciudadano", "valoracion-nutricional"]),
   dateTime: z.string().min(1, "La fecha y hora son requeridas"),
   assignedStaff: z.string().optional(),
   status: z.enum(["solicitada", "confirmada", "atendida", "cancelada"]).optional(),

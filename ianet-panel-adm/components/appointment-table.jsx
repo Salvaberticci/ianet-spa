@@ -114,8 +114,8 @@ export default function AppointmentTable({ appointments, pagination }) {
           className="px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
         >
           <option value="">Todos los tipos</option>
-          <option value="medica">Médica</option>
-          <option value="nutricional">Nutricional</option>
+          <option value="atencion-ciudadano">Atención al Ciudadano</option>
+          <option value="valoracion-nutricional">Valoración Nutricional</option>
         </select>
 
         <input
@@ -138,7 +138,7 @@ export default function AppointmentTable({ appointments, pagination }) {
           <thead>
             <tr className="border-b border-gray-200">
               <th className="text-left py-3 px-4 font-semibold text-gray-700">Paciente</th>
-              <th className="text-left py-3 px-4 font-semibold text-gray-700">Tipo</th>
+              <th className="text-left py-3 px-4 font-semibold text-gray-700">Tipo de Servicio</th>
               <th className="text-left py-3 px-4 font-semibold text-gray-700">Fecha/Hora</th>
               <th className="text-left py-3 px-4 font-semibold text-gray-700">Personal</th>
               <th className="text-left py-3 px-4 font-semibold text-gray-700">Estado</th>
@@ -152,13 +152,17 @@ export default function AppointmentTable({ appointments, pagination }) {
                   <div className="font-medium text-gray-800">{appointment.patientName}</div>
                   <div className="text-sm text-gray-600">{appointment.patientEmail}</div>
                 </td>
-                <td className="py-3 px-4 text-gray-600 capitalize">{appointment.type}</td>
+                <td className="py-3 px-4 text-gray-600 text-sm">
+                  {appointment.type === "atencion-ciudadano" ? "Atención al Ciudadano" : 
+                   appointment.type === "valoracion-nutricional" ? "Valoración Nutricional" : 
+                   appointment.type}
+                </td>
                 <td className="py-3 px-4 text-gray-600 text-sm">
                   {new Date(appointment.dateTime).toLocaleString("es-ES")}
                 </td>
                 <td className="py-3 px-4 text-gray-600">{appointment.assignedStaff?.name || "Sin asignar"}</td>
                 <td className="py-3 px-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${getStatusColor(appointment.status)}`}>
                     {appointment.status}
                   </span>
                 </td>

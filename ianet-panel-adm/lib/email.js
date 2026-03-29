@@ -73,3 +73,102 @@ export async function sendEventAssignmentEmail({ staff, event }) {
     // No lanzamos el error para no bloquear el flujo principal de la aplicación
   }
 }
+
+/**
+ * Envía una notificación a la institución cuando se solicita una nueva cita
+ * @param {string} institutionalEmail - Correo de la institución
+ * @param {Object} appointment - Nueva cita con patientName, patientEmail, patientPhone, type, dateTime, notes
+ */
+export async function sendAppointmentNotificationEmail({ institutionalEmail, appointment }) {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS || !institutionalEmail) {
+    console.warn("Nodemailer no configurado o falta email institucional. Saltando aviso.")
+    return
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || "587"),
+    secure: process.env.SMTP_SECURE === "true",
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  })
+
+  const typeLabels = {
+    "atencion-ciudadano": "Atención al Ciudadano",
+    "valoracion-nutricional": "Valoración Nutricional",
+  }
+
+  const dateStr = new Date(appointment.dateTime).toLocaleString("es-ES", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+
+  const mailOptions = {
+    from: `"${process.env.SMTP_FROM_NAME || "IANET Sistema"}" <${process.env.SMTP_USER}>`,
+    to: institutionalEmail,
+    subject: `🆕 Nueva Solicitud de Cita: ${appointment.patientName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #10b981; border-radius: 10px; overflow: hidden;">
+        <div style="background-color: #10b981; padding: 20px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0;">IANET Sistema</h1>
+          <p style="color: #ffffff; margin: 5px 0 0 0;">Nueva Solicitud de Cita</p>
+        </div>
+        <div style="padding: 30px;">
+          <h2 style="color: #10b981; border-bottom: 2px solid #f0fdf4; padding-bottom: 10px;">Detalles de la Cita</h2>
+          
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Paciente:</strong></td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #eee;">${appointment.patientName}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Tipo de Servicio:</strong></td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #eee;">${typeLabels[appointment.type] || appointment.type}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Fecha y Hora:</strong></td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #eee;">${dateStr}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Correo:</strong></td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #eee;">${appointment.patientEmail}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Teléfono:</strong></td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #eee;">${appointment.patientPhone}</td>
+            </tr>
+          </table>
+
+          ${appointment.notes ? `
+          <div style="margin-top: 20px; background-color: #f9fafb; padding: 15px; border-radius: 8px;">
+            <p style="margin: 0 0 5px 0;"><strong>Notas adicionales:</strong></p>
+            <p style="margin: 0; color: #666;">${appointment.notes}</p>
+          </div>
+          ` : ""}
+          
+          <div style="margin-top: 30px; text-align: center;">
+            <p>Por favor, ingresa al Panel Administrativo para confirmar esta cita.</p>
+          </div>
+          
+          <div style="margin-top: 30px; border-top: 1px solid #eee; pt-20px; text-align: center; font-size: 12px; color: #999;">
+            <p>Este es un mensaje automático generado por el sistema IANET.</p>
+          </div>
+        </div>
+      </div>
+    `,
+  }
+
+  try {
+    const info = await transporter.sendMail(mailOptions)
+    console.log(`Notificación de cita enviada a ${institutionalEmail}`)
+    return info
+  } catch (error) {
+    console.error(`Error al enviar notificación de cita:`, error)
+  }
+}

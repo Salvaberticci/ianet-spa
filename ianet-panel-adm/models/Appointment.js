@@ -16,7 +16,7 @@ const AppointmentSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["medica", "nutricional"],
+      enum: ["atencion-ciudadano", "valoracion-nutricional"],
       required: [true, "El tipo de cita es requerido"],
     },
     dateTime: {
