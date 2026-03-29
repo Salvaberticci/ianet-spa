@@ -24,8 +24,8 @@ const validationRules = {
 }
 
 const appointmentTypes = [
-  { value: "medica", label: "Consulta Médica" },
-  { value: "nutricional", label: "Consulta Nutricional" },
+  { value: "atencion-ciudadano", label: "Atención al Ciudadano" },
+  { value: "valoracion-nutricional", label: "Valoración Nutricional" },
 ]
 
 export function SolicitudesPage() {
@@ -63,19 +63,37 @@ export function SolicitudesPage() {
         notes: values.notes,
       }
 
-      // Only include dateTime if provided
+      // Validation: Schedule check
       if (values.dateTime) {
-        payload.dateTime = new Date(values.dateTime).toISOString()
+        const appointmentDate = new Date(values.dateTime)
+        const day = appointmentDate.getDay() // 1: Mon, 2: Tue
+        const hour = appointmentDate.getHours()
+        const mins = appointmentDate.getMinutes()
+
+        if (day !== 1 && day !== 2) {
+          setToast({ type: "error", message: "Las citas solo están disponibles los días Lunes y Martes." })
+          setIsSubmitting(false)
+          return
+        }
+
+        const totalMins = hour * 60 + mins
+        if (totalMins < 8 * 60 + 30 || totalMins >= 14 * 60) {
+          setToast({ type: "error", message: "El horario de atención es de 08:30 AM a 02:00 PM." })
+          setIsSubmitting(false)
+          return
+        }
+
+        payload.dateTime = appointmentDate.toISOString()
       }
 
       await appointmentsService.create(payload)
       setToast({
         type: "success",
-        message: "Solicitud de cita enviada exitosamente. Nos pondremos en contacto pronto para confirmar.",
+        message: "Solicitud de cita enviada exitosamente. Se ha enviado un aviso a la institución.",
       })
       reset()
     } catch (error) {
-      setToast({ type: "error", message: error.message || "Error al enviar la solicitud. Intenta nuevamente." })
+      setToast({ type: "error", message: error.message || "Error al enviar la solicitud." })
     } finally {
       setIsSubmitting(false)
     }
@@ -88,8 +106,8 @@ export function SolicitudesPage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-green-700 mb-4 text-balance">Solicitar Cita</h1>
           <p className="text-gray-600 max-w-2xl mx-auto leading-relaxed text-pretty">
-            Completa el formulario para solicitar una cita médica o nutricional. Nos pondremos en contacto contigo para
-            confirmar la fecha y hora.
+            Completa el formulario para solicitar atención al ciudadano o valoración nutricional. 
+            <strong> Horario de atención: Lunes y Martes de 8:30 AM a 2:00 PM.</strong>
           </p>
         </div>
 
@@ -102,9 +120,9 @@ export function SolicitudesPage() {
               </svg>
             </div>
             <div>
-              <h3 className="font-bold text-green-700 mb-1">Consulta Médica</h3>
+              <h3 className="font-bold text-green-700 mb-1">Atención al Ciudadano</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
-                Atención médica especializada para evaluación y seguimiento de tu salud.
+                Asistencia y orientación especializada para trámites y servicios institucionales.
               </p>
             </div>
           </Card>
@@ -121,9 +139,9 @@ export function SolicitudesPage() {
               </svg>
             </div>
             <div>
-              <h3 className="font-bold text-green-700 mb-1">Consulta Nutricional</h3>
+              <h3 className="font-bold text-green-700 mb-1">Valoración Nutricional</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
-                Evaluación nutricional personalizada para mejorar tus hábitos alimenticios.
+                Evaluación nutricional personalizada para el seguimiento de tu bienestar físico.
               </p>
             </div>
           </Card>
@@ -233,9 +251,9 @@ export function SolicitudesPage() {
                 <div className="text-sm text-green-800 leading-relaxed">
                   <p className="font-medium mb-1">Importante:</p>
                   <ul className="list-disc list-inside space-y-1">
-                    <li>Tu solicitud será revisada por nuestro equipo.</li>
-                    <li>Te contactaremos en un plazo máximo de 48 horas.</li>
-                    <li>Asegúrate de proporcionar información de contacto correcta.</li>
+                    <li>Atención exclusiva los días <strong>Lunes y Martes</strong>.</li>
+                    <li>Horario: <strong>08:30 AM a 02:00 PM</strong>.</li>
+                    <li>Tu solicitud será revisada y recibirás respuesta en máximo 48h.</li>
                   </ul>
                 </div>
               </div>

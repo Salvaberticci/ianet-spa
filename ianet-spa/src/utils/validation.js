@@ -18,7 +18,7 @@ export const validators = {
   },
 
   appointmentType: (value) => {
-    return ["medica", "nutricional"].includes(value)
+    return ["atencion-ciudadano", "valoracion-nutricional"].includes(value)
   },
 }
 
