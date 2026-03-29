@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Edit2, Trash2, UserSlash, UserCheck, Shield, UserPen } from "lucide-react"
+import { Edit2, Trash2, UserX, UserCheck, Shield } from "lucide-react"
 
 export default function UserTable({ users, currentUserId }) {
   const router = useRouter()
@@ -121,7 +121,7 @@ export default function UserTable({ users, currentUserId }) {
                     }`}
                     title={user.active ? "Desactivar usuario" : "Activar usuario"}
                   >
-                    {user.active ? <UserSlash size={18} /> : <UserCheck size={18} />}
+                    {user.active ? <UserX size={18} /> : <UserCheck size={18} />}
                   </button>
                   <button
                     onClick={() => handleDeleteUser(user)}

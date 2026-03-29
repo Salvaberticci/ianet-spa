@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { UserPlus, Shield, UserPen, Lock, X } from "lucide-react"
+import { UserPlus, Shield, Edit, Lock, X } from "lucide-react"
 
 export default function UserForm({ closeForm }) {
   const router = useRouter()
