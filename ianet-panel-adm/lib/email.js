@@ -1,24 +1,26 @@
 import nodemailer from "nodemailer"
 
 /**
- * Configuración del transporte de Nodemailer (SMTP)
- */
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || "587"),
-  secure: process.env.SMTP_SECURE === "true", // true para el puerto 465, false para otros
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-})
-
-/**
  * Envía un correo de notificación de asignación a un evento
  * @param {Object} staff - Miembro del personal con name y email
  * @param {Object} event - Evento con name, date, time, location, description
  */
 export async function sendEventAssignmentEmail({ staff, event }) {
+  // 1. Verificar configuración básica antes de crear el transporte
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.warn("Nodemailer no configurado: faltan variables SMTP. Saltando envío de correo.")
+    return
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || "587"),
+    secure: process.env.SMTP_SECURE === "true",
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  })
   if (!staff.email) {
     console.error(`No se puede enviar correo a ${staff.name}: falta el email.`)
     return

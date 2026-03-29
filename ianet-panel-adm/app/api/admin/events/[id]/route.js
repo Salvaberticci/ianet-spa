@@ -51,20 +51,23 @@ export async function PUT(request, { params }) {
       },
     )
 
-    // 2. Notificar a los NUEVOS miembros del personal asignado (en segundo plano)
-    if (event.assignedStaff && event.assignedStaff.length > 0) {
-      const oldStaffIds = (oldEvent.assignedStaff || []).map((id) => id.toString())
-      const newStaffIds = event.assignedStaff.filter((id) => !oldStaffIds.includes(id.toString()))
+    // 2. Notificar a los NUEVOS miembros del personal asignado (en bloque de seguridad)
+    try {
+      if (event.assignedStaff && event.assignedStaff.length > 0) {
+        const oldStaffIds = (oldEvent.assignedStaff || []).map((id) => id.toString())
+        const newStaffIds = event.assignedStaff.filter((id) => !oldStaffIds.includes(id.toString()))
 
-      if (newStaffIds.length > 0) {
-        Staff.find({ _id: { $in: newStaffIds }, active: true })
-          .then((staffMembers) => {
-            staffMembers.forEach((staff) => {
-              sendEventAssignmentEmail({ staff, event }).catch(console.error)
-            })
-          })
-          .catch(console.error)
+        if (newStaffIds.length > 0) {
+          const staffMembers = await Staff.find({ _id: { $in: newStaffIds }, active: true })
+          
+          // Esperamos a que terminen los procesos de envío para estabilizar Vercel
+          await Promise.allSettled(
+            staffMembers.map(staff => sendEventAssignmentEmail({ staff, event }))
+          )
+        }
       }
+    } catch (mailError) {
+      console.error("Error al notificar nuevos asignados:", mailError)
     }
 
     if (!event) {

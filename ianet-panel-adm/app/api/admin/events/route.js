@@ -49,15 +49,21 @@ export async function POST(request) {
       date: new Date(validated.date),
     })
 
-    // 4. Enviar notificaciones al personal asignado (en segundo plano)
-    if (event.assignedStaff && event.assignedStaff.length > 0) {
-      Staff.find({ _id: { $in: event.assignedStaff }, active: true })
-        .then((staffMembers) => {
-          staffMembers.forEach((staff) => {
-            sendEventAssignmentEmail({ staff, event }).catch(console.error)
-          })
-        })
-        .catch(console.error)
+    // 4. Enviar notificaciones al personal asignado (en bloque de seguridad)
+    try {
+      if (event.assignedStaff && event.assignedStaff.length > 0) {
+        // Obtenemos los miembros para tener sus correos
+        const staffMembers = await Staff.find({ _id: { $in: event.assignedStaff }, active: true })
+        
+        // Enviamos las promesas de correo (sin bloquear la respuesta crítica si no queremos)
+        // Pero en Serverless es mejor esperar o usar un manejador de fondo robusto
+        // Aquí esperamos a que se procesen las llamadas para evitar que Vercel mate el proceso
+        await Promise.allSettled(
+          staffMembers.map(staff => sendEventAssignmentEmail({ staff, event }))
+        )
+      }
+    } catch (mailError) {
+      console.error("Error crítico en el flujo de notificación de correos:", mailError)
     }
 
     return NextResponse.json(event, { status: 201 })
