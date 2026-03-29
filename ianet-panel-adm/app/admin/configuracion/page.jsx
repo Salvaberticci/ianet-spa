@@ -13,6 +13,12 @@ export default function ConfiguracionPage() {
   const [settings, setSettings] = useState({
     institutionalEmail: "",
   })
+  const [smtpStatus, setSmtpStatus] = useState({
+    host: false,
+    port: false,
+    user: false,
+    pass: false,
+  })
   const [testLoading, setTestLoading] = useState(false)
 
   useEffect(() => {
@@ -27,6 +33,9 @@ export default function ConfiguracionPage() {
         setSettings({
           institutionalEmail: data.institutionalEmail || "",
         })
+        if (data.smtpStatus) {
+          setSmtpStatus(data.smtpStatus)
+        }
       }
     } catch (error) {
       console.error("Error al cargar configuración:", error)
@@ -155,12 +164,33 @@ export default function ConfiguracionPage() {
             <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 flex flex-col gap-3">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">Dirección de Envío (SMTP_USER)</span>
-                <span className="font-mono text-green-600 font-bold text-xs">DETECTADO</span>
+                {smtpStatus.user ? (
+                  <span className="font-mono text-green-600 font-bold text-xs flex items-center gap-1">
+                    <div className="w-2 h-2 rounded-full bg-green-500" /> DETECTADO
+                  </span>
+                ) : (
+                  <span className="font-mono text-red-600 font-bold text-xs flex items-center gap-1">
+                    <div className="w-2 h-2 rounded-full bg-red-500" /> NO CONFIGURADO
+                  </span>
+                )}
               </div>
               <div className="flex items-center justify-between text-sm border-t border-gray-200 pt-2">
                 <span className="text-gray-600">Servidor (SMTP_HOST)</span>
-                <span className="font-mono text-green-600 font-bold text-xs">DETECTADO</span>
+                {smtpStatus.host ? (
+                  <span className="font-mono text-green-600 font-bold text-xs flex items-center gap-1">
+                    <div className="w-2 h-2 rounded-full bg-green-500" /> DETECTADO
+                  </span>
+                ) : (
+                  <span className="font-mono text-red-600 font-bold text-xs flex items-center gap-1">
+                    <div className="w-2 h-2 rounded-full bg-red-500" /> NO CONFIGURADO
+                  </span>
+                )}
               </div>
+              {!smtpStatus.user && (
+                <div className="mt-2 p-3 bg-red-50 border border-red-100 rounded-lg text-[11px] text-red-700">
+                  <strong>Nota:</strong> Estas variables deben configurarse en el panel de Vercel o en el archivo .env.local de tu computadora.
+                </div>
+              )}
             </div>
 
             <Button

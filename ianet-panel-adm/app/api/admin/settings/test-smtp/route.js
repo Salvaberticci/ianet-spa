@@ -25,9 +25,18 @@ export async function POST(req) {
       }, { status: 400 })
     }
 
+    // Verificar si las variables de entorno existen antes de intentar conectar
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Variables de entorno SMTP no configuradas. Por favor, añádelas a Vercel o a tu archivo .env.local.",
+        details: "MISSING_ENV_VARS"
+      }, { status: 400 })
+    }
+
     // Limpiar espacios en la contraseña (frecuente en App Passwords de Google)
-    const smtpPass = process.env.SMTP_PASS ? process.env.SMTP_PASS.replace(/\s+/g, "") : ""
-    const isGmail = process.env.SMTP_HOST?.includes("gmail.com")
+    const smtpPass = process.env.SMTP_PASS.replace(/\s+/g, "")
+    const isGmail = process.env.SMTP_HOST.includes("gmail.com")
 
     const transportConfig = {
       ...(isGmail 

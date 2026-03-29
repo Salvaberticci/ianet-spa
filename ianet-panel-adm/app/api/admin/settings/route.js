@@ -5,7 +5,7 @@ import Setting from "@/models/Setting"
 
 export async function GET() {
   try {
-    await requireAuth()
+    const session = await requireAuth()
     await dbConnect()
 
     const settings = await Setting.find()
@@ -13,6 +13,14 @@ export async function GET() {
       acc[curr.key] = curr.value
       return acc
     }, {})
+
+    // Añadir estado dinámico de SMTP para diagnóstico
+    config.smtpStatus = {
+      host: !!process.env.SMTP_HOST,
+      port: !!process.env.SMTP_PORT,
+      user: !!process.env.SMTP_USER,
+      pass: !!process.env.SMTP_PASS,
+    }
 
     return NextResponse.json(config)
   } catch (error) {
