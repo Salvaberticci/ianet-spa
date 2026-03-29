@@ -80,8 +80,19 @@ export async function sendEventAssignmentEmail({ staff, event }) {
  * @param {Object} appointment - Nueva cita con patientName, patientEmail, patientPhone, type, dateTime, notes
  */
 export async function sendAppointmentNotificationEmail({ institutionalEmail, appointment }) {
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS || !institutionalEmail) {
-    console.warn("Nodemailer no configurado o falta email institucional. Saltando aviso.")
+  console.log(`[EMAIL] Iniciando proceso de aviso de cita para: ${institutionalEmail}`)
+  
+  // 1. Verificar configuración SMTP
+  const smtpConfig = {
+    host: process.env.SMTP_HOST,
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS ? "****" : "FALTA",
+    port: process.env.SMTP_PORT,
+    fromName: process.env.SMTP_FROM_NAME
+  }
+  
+  if (!smtpConfig.host || !smtpConfig.user || !smtpConfig.pass || !institutionalEmail) {
+    console.warn("[EMAIL] Error: Configuración SMTP incompleta o falta el email institucional. Saltando aviso.", smtpConfig)
     return
   }
 
@@ -166,9 +177,10 @@ export async function sendAppointmentNotificationEmail({ institutionalEmail, app
 
   try {
     const info = await transporter.sendMail(mailOptions)
-    console.log(`Notificación de cita enviada a ${institutionalEmail}`)
+    console.log(`[EMAIL] Notificación enviada con éxito a ${institutionalEmail}. ID: ${info.messageId}`)
     return info
   } catch (error) {
-    console.error(`Error al enviar notificación de cita:`, error)
+    console.error(`[EMAIL] Error fatal al enviar notificación a ${institutionalEmail}:`, error.message)
+    console.error(error)
   }
 }

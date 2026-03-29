@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut, useSession } from "next-auth/react"
 import { LayoutDashboard, Newspaper, MessageSquare, Calendar, Package, CalendarDays, Users, FileText, BarChart, LogOut, UserPlus, Settings } from "lucide-react"
 import Image from 'next/image'
 import { isFeatureEnabled } from "@/lib/featureFlags"
+import { toast } from "sonner"
 
 const menuItems = [
   {
@@ -73,6 +74,7 @@ export default function Sidebar() {
   const { data: session } = useSession()
   const userRole = session?.user?.role
   const [appointmentCount, setAppointmentCount] = useState(0)
+  const prevCountRef = useRef(0)
 
   useEffect(() => {
     const fetchCount = async () => {
@@ -80,7 +82,17 @@ export default function Sidebar() {
         const res = await fetch("/api/admin/appointments/count")
         if (res.ok) {
           const data = await res.json()
+          
+          // Si el nuevo conteo es mayor al anterior, disparamos una notificación
+          if (data.count > prevCountRef.current && prevCountRef.current !== 0) {
+            toast.success("¡Nueva solicitud de cita recibida!", {
+              description: "Revisa la sección de Citas para más detalles.",
+              duration: 5000,
+            })
+          }
+          
           setAppointmentCount(data.count)
+          prevCountRef.current = data.count
         }
       } catch (error) {
         console.error("Error al obtener conteo de citas:", error)
@@ -88,8 +100,8 @@ export default function Sidebar() {
     }
 
     fetchCount()
-    // Refrescar cada 5 minutos
-    const interval = setInterval(fetchCount, 5 * 60 * 1000)
+    // Refrescar cada 30 segundos para una experiencia más "en vivo"
+    const interval = setInterval(fetchCount, 30 * 1000)
     return () => clearInterval(interval)
   }, [])
 

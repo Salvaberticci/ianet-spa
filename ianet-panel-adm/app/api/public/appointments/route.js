@@ -48,14 +48,17 @@ export async function POST(request) {
     try {
       const settings = await Setting.findOne({ key: "institutionalEmail" })
       if (settings?.value) {
+        console.log(`[API] Se encontró email institucional: ${settings.value}. Disparando aviso...`)
         // Ejecutamos el envío sin esperar para no retrasar la respuesta al cliente
         sendAppointmentNotificationEmail({
           institutionalEmail: settings.value,
           appointment: appointment.toObject(),
         })
+      } else {
+        console.warn("[API] No se encontró la configuración 'institutionalEmail'. El aviso por correo no se enviará.")
       }
     } catch (emailErr) {
-      console.error("Error al intentar obtener email institucional para aviso:", emailErr)
+      console.error("[API] Error al intentar obtener email institucional para aviso:", emailErr)
     }
     // ─────────────────────────────────────────────────────────────────────────
 
