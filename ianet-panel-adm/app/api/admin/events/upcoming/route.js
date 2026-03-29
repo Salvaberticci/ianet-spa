@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/lib/auth"
 import dbConnect from "@/lib/mongodb"
 import Event from "@/models/Event"
+import Staff from "@/models/Staff"
 
 export async function GET(request) {
   try {
