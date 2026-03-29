@@ -5,6 +5,8 @@ import UserTable from "@/components/user-table"
 import UserFormContainer from "@/components/user-form-container"
 import { Users, UserPlus, ShieldAlert } from "lucide-react"
 
+export const dynamic = "force-dynamic"
+
 async function getUsers() {
   await dbConnect()
   const users = await User.find({}, "-password").sort({ createdAt: -1 }).lean()
