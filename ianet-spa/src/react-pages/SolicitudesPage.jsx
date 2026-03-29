@@ -215,7 +215,7 @@ export function SolicitudesPage() {
             {/* Preferred Date/Time */}
             <div>
               <label htmlFor="dateTime" className="block text-sm font-medium text-gray-700 mb-1">
-                Fecha y Hora Preferida <span className="text-gray-500 text-xs">(Opcional)</span>
+                Fecha y Hora Preferida <span className="text-red-500 font-bold">*</span>
               </label>
               <input
                 id="dateTime"
@@ -228,11 +228,33 @@ export function SolicitudesPage() {
                   const pad = (n) => String(n).padStart(2, "0")
                   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`
                 })()}
-                onChange={(e) => handleChange("dateTime", e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value
+                  if (!val) {
+                    handleChange("dateTime", "")
+                    return
+                  }
+                  
+                  const d = new Date(val)
+                  const day = d.getDay()
+                  if (day !== 1 && day !== 2) {
+                    setToast({ type: "warning", message: "Lo sentimos, solo atendemos citas los días Lunes y Martes." })
+                    return 
+                  }
+                  
+                  const totalMins = d.getHours() * 60 + d.getMinutes()
+                  if (totalMins < 8 * 60 + 30 || totalMins > 14 * 60) {
+                    setToast({ type: "warning", message: "El horario de atención es estrictamente de 08:30 AM a 02:00 PM." })
+                    return
+                  }
+                  
+                  handleChange("dateTime", val)
+                }}
                 className="w-full border border-green-300 rounded-2xl px-4 py-2 focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-all"
+                required
               />
               <p className="text-xs text-gray-500 mt-1">
-                Esta es una fecha sugerida (solo fechas futuras). Nos pondremos en contacto para confirmar disponibilidad.
+                Selecciona un Lunes o Martes entre las 08:30 AM y las 02:00 PM.
               </p>
             </div>
 
