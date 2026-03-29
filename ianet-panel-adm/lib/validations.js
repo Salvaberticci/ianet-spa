@@ -66,3 +66,11 @@ export const nutritionalDataSchema = z.object({
   bmi: z.number().min(0).optional().nullable(),
   notes: z.string().optional(),
 })
+
+export const userSchema = z.object({
+  name: z.string().min(1, "El nombre es requerido"),
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres").optional().or(z.literal("")),
+  role: z.enum(["admin", "editor"]),
+  active: z.boolean().optional(),
+})

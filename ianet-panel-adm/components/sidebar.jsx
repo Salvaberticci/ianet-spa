@@ -2,8 +2,8 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { signOut } from "next-auth/react"
-import { LayoutDashboard, Newspaper, MessageSquare, Calendar, Package, CalendarDays, Users, FileText, BarChart, LogOut } from "lucide-react"
+import { signOut, useSession } from "next-auth/react"
+import { LayoutDashboard, Newspaper, MessageSquare, Calendar, Package, CalendarDays, Users, FileText, BarChart, LogOut, UserPlus } from "lucide-react"
 import Image from 'next/image'
 import { isFeatureEnabled } from "@/lib/featureFlags"
 
@@ -53,10 +53,18 @@ const menuItems = [
     href: "/admin/estadisticas",
     icon: BarChart,
   },
+  {
+    title: "Usuarios",
+    href: "/admin/usuarios",
+    icon: UserPlus,
+    isAdminOnly: true,
+  },
 ]
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const { data: session } = useSession()
+  const userRole = session?.user?.role
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: "/login" })
@@ -74,6 +82,7 @@ export default function Sidebar() {
         <ul className="space-y-2">
           {menuItems
             .filter((item) => {
+              if (item.isAdminOnly && userRole !== "admin") return false
               if (item.href.startsWith("/admin/inventario")) return isFeatureEnabled("inventory")
               if (item.href.startsWith("/admin/eventos")) return isFeatureEnabled("events")
               return true
