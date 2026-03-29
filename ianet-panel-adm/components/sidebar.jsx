@@ -101,8 +101,8 @@ export default function Sidebar() {
     }
 
     fetchCount()
-    // Refrescar cada 30 segundos para una experiencia más "en vivo"
-    const interval = setInterval(fetchCount, 30 * 1000)
+    // Refrescar cada 10 segundos para una experiencia "en vivo" más inmediata
+    const interval = setInterval(fetchCount, 10 * 1000)
     
     // Marcar como montado para evitar error de hidratación
     setIsMounted(true)
