@@ -2,7 +2,9 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/lib/auth"
 import dbConnect from "@/lib/mongodb"
 import Event from "@/models/Event"
+import Staff from "@/models/Staff"
 import { eventSchema } from "@/lib/validations"
+import { sendEventAssignmentEmail } from "@/lib/email"
 
 export async function GET(request) {
   try {
@@ -46,6 +48,17 @@ export async function POST(request) {
       ...validated,
       date: new Date(validated.date),
     })
+
+    // 4. Enviar notificaciones al personal asignado (en segundo plano)
+    if (event.assignedStaff && event.assignedStaff.length > 0) {
+      Staff.find({ _id: { $in: event.assignedStaff }, active: true })
+        .then((staffMembers) => {
+          staffMembers.forEach((staff) => {
+            sendEventAssignmentEmail({ staff, event }).catch(console.error)
+          })
+        })
+        .catch(console.error)
+    }
 
     return NextResponse.json(event, { status: 201 })
   } catch (error) {
