@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card } from "@/components/atoms/Card"
-import { Input } from "@/components/atoms/Input"
-import { Button } from "@/components/atoms/Button"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { Settings, Mail, Save, Loader2, Info } from "lucide-react"
 
