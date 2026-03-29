@@ -1,6 +1,10 @@
 "use client"
 
 import { useState } from "react"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
+import { CalendarIcon } from "lucide-react"
+
 import { Card } from "../components/atoms/Card"
 import { Input } from "../components/atoms/Input"
 import { Select } from "../components/atoms/Select"
@@ -9,6 +13,9 @@ import { Button } from "../components/atoms/Button"
 import { Toast } from "../components/atoms/Toast"
 import { useForm } from "../hooks/useForm"
 import { appointmentsService } from "../services/appointmentsService"
+import { Calendar } from "../../components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "../../components/ui/popover"
+import { cn } from "../../lib/utils"
 
 const validationRules = {
   patientName: [{ type: "required", message: "El nombre es requerido" }],
@@ -38,8 +45,9 @@ export function SolicitudesPage() {
       patientEmail: "",
       patientPhone: "",
       type: "",
-      dateTime: "",
       notes: "",
+      appointmentDate: null,
+      appointmentTime: "",
     },
     validationRules,
   )
@@ -64,27 +72,18 @@ export function SolicitudesPage() {
       }
 
       // Validation: Schedule check
-      if (values.dateTime) {
-        const appointmentDate = new Date(values.dateTime)
-        const day = appointmentDate.getDay() // 1: Mon, 2: Tue
-        const hour = appointmentDate.getHours()
-        const mins = appointmentDate.getMinutes()
-
-        if (day !== 1 && day !== 2) {
-          setToast({ type: "error", message: "Las citas solo están disponibles los días Lunes y Martes." })
-          setIsSubmitting(false)
-          return
-        }
-
-        const totalMins = hour * 60 + mins
-        if (totalMins < 8 * 60 + 30 || totalMins >= 14 * 60) {
-          setToast({ type: "error", message: "El horario de atención es de 08:30 AM a 02:00 PM." })
-          setIsSubmitting(false)
-          return
-        }
-
-        payload.dateTime = appointmentDate.toISOString()
+      if (!values.appointmentDate || !values.appointmentTime) {
+        setToast({ type: "error", message: "Debe seleccionar una fecha y hora preferida válida." })
+        setIsSubmitting(false)
+        return
       }
+
+      const [hours, minutes] = values.appointmentTime.split(":")
+      const mergedDate = new Date(values.appointmentDate)
+      mergedDate.setHours(Number.parseInt(hours, 10), Number.parseInt(minutes, 10), 0, 0)
+      
+      payload.dateTime = mergedDate.toISOString()
+
 
       const response = await appointmentsService.create(payload)
       console.log("[DEBUG] Appointment Response:", response)
@@ -213,49 +212,71 @@ export function SolicitudesPage() {
             />
 
             {/* Preferred Date/Time */}
-            <div>
-              <label htmlFor="dateTime" className="block text-sm font-medium text-gray-700 mb-1">
-                Fecha y Hora Preferida <span className="text-red-500 font-bold">*</span>
-              </label>
-              <input
-                id="dateTime"
-                name="dateTime"
-                type="datetime-local"
-                value={values.dateTime}
-                min={(() => {
-                  const now = new Date()
-                  now.setSeconds(0, 0)
-                  const pad = (n) => String(n).padStart(2, "0")
-                  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`
-                })()}
-                onChange={(e) => {
-                  const val = e.target.value
-                  if (!val) {
-                    handleChange("dateTime", "")
-                    return
-                  }
-                  
-                  const d = new Date(val)
-                  const day = d.getDay()
-                  if (day !== 1 && day !== 2) {
-                    setToast({ type: "warning", message: "Lo sentimos, solo atendemos citas los días Lunes y Martes." })
-                    return 
-                  }
-                  
-                  const totalMins = d.getHours() * 60 + d.getMinutes()
-                  if (totalMins < 8 * 60 + 30 || totalMins > 14 * 60) {
-                    setToast({ type: "warning", message: "El horario de atención es estrictamente de 08:30 AM a 02:00 PM." })
-                    return
-                  }
-                  
-                  handleChange("dateTime", val)
-                }}
-                className="w-full border border-green-300 rounded-2xl px-4 py-2 focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none transition-all"
-                required
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Selecciona un Lunes o Martes entre las 08:30 AM y las 02:00 PM.
-              </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Date Column */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Fecha Preferida <span className="text-red-500 font-bold">*</span>
+                </label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className={cn(
+                        "w-full flex items-center justify-start text-left font-normal px-4 py-2 border border-green-300 rounded-2xl bg-white hover:bg-green-50 transition-colors focus:outline-none focus:ring-2 focus:ring-green-600 h-10",
+                        !values.appointmentDate && "text-gray-500",
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {values.appointmentDate ? format(values.appointmentDate, "PPP", { locale: es }) : "Selecciona una fecha"}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 z-50 bg-white shadow-xl rounded-xl border border-gray-200" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={values.appointmentDate}
+                      onSelect={(date) => handleChange("appointmentDate", date)}
+                      disabled={(date) => {
+                        const today = new Date()
+                        today.setHours(0, 0, 0, 0)
+                        return date < today || (date.getDay() !== 1 && date.getDay() !== 2)
+                      }}
+                      initialFocus
+                      locale={es}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <p className="text-xs text-gray-500 mt-1">🗓️ Solo Lunes y Martes.</p>
+              </div>
+
+              {/* Time Column */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Hora Preferida <span className="text-red-500 font-bold">*</span>
+                </label>
+                <select
+                  name="appointmentTime"
+                  value={values.appointmentTime}
+                  onChange={(e) => handleChange("appointmentTime", e.target.value)}
+                  className="w-full px-4 py-2 border border-green-300 rounded-2xl bg-white flex items-center h-10 focus:outline-none focus:ring-2 focus:ring-green-600 hover:bg-green-50 transition-colors"
+                  required
+                >
+                  <option value="">Selecciona la hora</option>
+                  <option value="08:30">08:30 AM</option>
+                  <option value="09:00">09:00 AM</option>
+                  <option value="09:30">09:30 AM</option>
+                  <option value="10:00">10:00 AM</option>
+                  <option value="10:30">10:30 AM</option>
+                  <option value="11:00">11:00 AM</option>
+                  <option value="11:30">11:30 AM</option>
+                  <option value="12:00">12:00 PM</option>
+                  <option value="12:30">12:30 PM</option>
+                  <option value="13:00">01:00 PM</option>
+                  <option value="13:30">01:30 PM</option>
+                  <option value="14:00">02:00 PM</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">🕒 De 08:30 AM a 02:00 PM.</p>
+              </div>
             </div>
 
             {/* Notes */}
