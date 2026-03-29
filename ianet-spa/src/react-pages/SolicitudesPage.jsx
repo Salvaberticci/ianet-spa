@@ -86,13 +86,23 @@ export function SolicitudesPage() {
         payload.dateTime = appointmentDate.toISOString()
       }
 
-      await appointmentsService.create(payload)
-      setToast({
-        type: "success",
-        message: "Solicitud de cita enviada exitosamente. Se ha enviado un aviso a la institución.",
-      })
+      const response = await appointmentsService.create(payload)
+      console.log("[DEBUG] Appointment Response:", response)
+
+      if (response.mailStatus && !response.mailStatus.sent) {
+        setToast({
+          type: "warning",
+          message: `Cita registrada, pero el aviso por correo falló: ${response.mailStatus.error || "Error SMTP"}. Revisa la consola para más detalles.`,
+        })
+      } else {
+        setToast({
+          type: "success",
+          message: "Solicitud de cita enviada exitosamente. Se ha enviado un aviso a la institución.",
+        })
+      }
       reset()
     } catch (error) {
+      console.error("[DEBUG] Submission Error:", error)
       setToast({ type: "error", message: error.message || "Error al enviar la solicitud." })
     } finally {
       setIsSubmitting(false)

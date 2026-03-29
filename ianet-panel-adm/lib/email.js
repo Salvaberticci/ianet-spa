@@ -179,9 +179,9 @@ export async function sendAppointmentNotificationEmail({ institutionalEmail, app
   try {
     const info = await transporter.sendMail(mailOptions)
     console.log(`[EMAIL] Notificación enviada con éxito a ${institutionalEmail}. ID: ${info.messageId}`)
-    return info
+    return { success: true, messageId: info.messageId }
   } catch (error) {
     console.error(`[EMAIL] Error fatal al enviar notificación a ${institutionalEmail}:`, error.message)
-    console.error(error)
+    return { success: false, error: error.message, code: error.code }
   }
 }

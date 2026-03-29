@@ -44,23 +44,23 @@ export async function POST(request) {
       dateTime: appointmentDate,
     })
 
+    let mailStatus = { sent: false, error: "No configurado" }
     // ── NOTIFICACIÓN POR EMAIL ───────────────────────────────────────────────
     try {
       const settings = await Setting.findOne({ key: "institutionalEmail" })
       if (settings?.value) {
         console.log(`[API] Se encontró email institucional: ${settings.value}. Disparando aviso...`)
         
-        // IMPORTANTE: En Vercel DEBEMOS esperar (await) el envío del correo, 
-        // de lo contrario la función se cierra antes de terminar el proceso SMTP.
-        await sendAppointmentNotificationEmail({
+        const result = await sendAppointmentNotificationEmail({
           institutionalEmail: settings.value,
           appointment: appointment.toObject(),
         })
+        mailStatus = { sent: result?.success || false, info: result }
       } else {
-        console.warn("[API] No se encontró la configuración 'institutionalEmail' en la base de datos. El aviso por correo no se enviará.")
+        mailStatus = { sent: false, error: "Settings not found" }
       }
     } catch (emailErr) {
-      console.error("[API] Error al intentar procesar la notificación de correo:", emailErr)
+      mailStatus = { sent: false, error: emailErr.message }
     }
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -68,6 +68,7 @@ export async function POST(request) {
       {
         message: "Cita solicitada exitosamente",
         id: appointment._id,
+        mailStatus, // Esto se verá en la consola del navegador del desarrollador
       },
       { status: 201 },
     )
