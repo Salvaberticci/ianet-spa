@@ -13,12 +13,18 @@ export async function POST(request) {
     const validated = appointmentSchema.parse(body)
     const appointmentDate = new Date(validated.dateTime)
 
-    // ── VALIDACIÓN DE HORARIO ────────────────────────────────────────────────
-    // Lunes = 1, Martes = 2
-    const day = appointmentDate.getDay()
-    const hour = appointmentDate.getHours()
-    const minutes = appointmentDate.getMinutes()
+    // ── VALIDACIÓN DE HORARIO (ZONA HORARIA VENEZUELA UTC-4) ─────────────────
+    let hour = appointmentDate.getUTCHours() - 4
+    let day = appointmentDate.getUTCDay()
+    const minutes = appointmentDate.getUTCMinutes()
 
+    // Ajuste si el cambio de zona horaria cruza la medianoche
+    if (hour < 0) {
+      hour += 24
+      day = (day - 1 + 7) % 7
+    }
+
+    // Lunes = 1, Martes = 2
     if (day !== 1 && day !== 2) {
       return NextResponse.json(
         { error: "Las citas solo se pueden agendar los días Lunes y Martes." },
@@ -31,9 +37,9 @@ export async function POST(request) {
     const startLimit = 8 * 60 + 30 // 08:30
     const endLimit = 14 * 60 // 14:00
 
-    if (minutesSinceMidnight < startLimit || minutesSinceMidnight >= endLimit) {
+    if (minutesSinceMidnight < startLimit || minutesSinceMidnight > endLimit) {
       return NextResponse.json(
-        { error: "El horario de atención es de 8:30 AM a 2:00 PM." },
+        { error: "El horario de atención es estrictamente de 8:30 AM a 2:00 PM." },
         { status: 400 }
       )
     }
