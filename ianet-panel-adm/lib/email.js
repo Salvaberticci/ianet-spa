@@ -80,19 +80,20 @@ export async function sendEventAssignmentEmail({ staff, event }) {
  * @param {Object} appointment - Nueva cita con patientName, patientEmail, patientPhone, type, dateTime, notes
  */
 export async function sendAppointmentNotificationEmail({ institutionalEmail, appointment }) {
-  console.log(`[EMAIL] Iniciando proceso de aviso de cita para: ${institutionalEmail}`)
+  console.log(`[DIAGNÓSTICO EMAIL] Destinatario: ${institutionalEmail}`)
+  console.log(`[DIAGNÓSTICO SMTP] User: ${process.env.SMTP_USER || "VACÍO"}, Host: ${process.env.SMTP_HOST || "VACÍO"}`)
   
   // 1. Verificar configuración SMTP
   const smtpConfig = {
     host: process.env.SMTP_HOST,
     user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS ? "****" : "FALTA",
+    pass: process.env.SMTP_PASS ? "PRESENT" : "MISSING",
     port: process.env.SMTP_PORT,
     fromName: process.env.SMTP_FROM_NAME
   }
   
   if (!smtpConfig.host || !smtpConfig.user || !smtpConfig.pass || !institutionalEmail) {
-    console.warn("[EMAIL] Error: Configuración SMTP incompleta o falta el email institucional. Saltando aviso.", smtpConfig)
+    console.warn("[EMAIL] Error Crítico: Faltan parámetros para el envío del correo.", smtpConfig)
     return
   }
 

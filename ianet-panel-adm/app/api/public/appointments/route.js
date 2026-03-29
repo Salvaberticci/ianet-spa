@@ -49,16 +49,18 @@ export async function POST(request) {
       const settings = await Setting.findOne({ key: "institutionalEmail" })
       if (settings?.value) {
         console.log(`[API] Se encontró email institucional: ${settings.value}. Disparando aviso...`)
-        // Ejecutamos el envío sin esperar para no retrasar la respuesta al cliente
-        sendAppointmentNotificationEmail({
+        
+        // IMPORTANTE: En Vercel DEBEMOS esperar (await) el envío del correo, 
+        // de lo contrario la función se cierra antes de terminar el proceso SMTP.
+        await sendAppointmentNotificationEmail({
           institutionalEmail: settings.value,
           appointment: appointment.toObject(),
         })
       } else {
-        console.warn("[API] No se encontró la configuración 'institutionalEmail'. El aviso por correo no se enviará.")
+        console.warn("[API] No se encontró la configuración 'institutionalEmail' en la base de datos. El aviso por correo no se enviará.")
       }
     } catch (emailErr) {
-      console.error("[API] Error al intentar obtener email institucional para aviso:", emailErr)
+      console.error("[API] Error al intentar procesar la notificación de correo:", emailErr)
     }
     // ─────────────────────────────────────────────────────────────────────────
 
