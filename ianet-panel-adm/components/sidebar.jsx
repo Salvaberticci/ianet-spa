@@ -75,6 +75,7 @@ export default function Sidebar() {
   const userRole = session?.user?.role
   const [appointmentCount, setAppointmentCount] = useState(0)
   const prevCountRef = useRef(0)
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
     const fetchCount = async () => {
@@ -102,11 +103,20 @@ export default function Sidebar() {
     fetchCount()
     // Refrescar cada 30 segundos para una experiencia más "en vivo"
     const interval = setInterval(fetchCount, 30 * 1000)
+    
+    // Marcar como montado para evitar error de hidratación
+    setIsMounted(true)
+    
     return () => clearInterval(interval)
   }, [])
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: "/login" })
+  }
+
+  // Si no está montado, renderizamos una versión estática o vacía para evitar desajustes con el servidor
+  if (!isMounted) {
+    return <aside className="w-64 bg-white border-r border-gray-200 min-h-screen flex flex-col shadow-sm" />
   }
 
   return (

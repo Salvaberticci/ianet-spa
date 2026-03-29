@@ -13,6 +13,7 @@ export default function ConfiguracionPage() {
   const [settings, setSettings] = useState({
     institutionalEmail: "",
   })
+  const [testLoading, setTestLoading] = useState(false)
 
   useEffect(() => {
     fetchSettings()
@@ -56,6 +57,32 @@ export default function ConfiguracionPage() {
       toast.error("Error de conexión")
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleTestSmtp = async () => {
+    if (!settings.institutionalEmail) {
+      toast.error("Guarda primero un correo institucional de destino")
+      return
+    }
+
+    setTestLoading(true)
+    try {
+      const res = await fetch("/api/admin/settings/test-smtp", {
+        method: "POST",
+      })
+      const data = await res.json()
+
+      if (res.ok) {
+        toast.success(data.message)
+      } else {
+        toast.error(`Error SMTP: ${data.error}`)
+        console.error("Detalle error SMTP:", data)
+      }
+    } catch (error) {
+      toast.error("Error de conexión al servidor de prueba")
+    } finally {
+      setTestLoading(false)
     }
   }
 
@@ -111,6 +138,50 @@ export default function ConfiguracionPage() {
                 A este correo llegarán las alertas automáticas cada vez que un ciudadano solicite una nueva cita desde la web.
               </p>
             </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+          <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <Settings className="w-5 h-5 text-blue-600" />
+            Prueba de Conectividad SMTP
+          </h2>
+
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Usa esta herramienta para verificar si el servidor de correos está correctamente configurado en el entorno (Vercel/Local).
+            </p>
+
+            <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 flex flex-col gap-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Dirección de Envío (SMTP_USER)</span>
+                <span className="font-mono text-green-600 font-bold text-xs">DETECTADO</span>
+              </div>
+              <div className="flex items-center justify-between text-sm border-t border-gray-200 pt-2">
+                <span className="text-gray-600">Servidor (SMTP_HOST)</span>
+                <span className="font-mono text-green-600 font-bold text-xs">DETECTADO</span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              disabled={testLoading || saving}
+              onClick={handleTestSmtp}
+              className="w-full py-6 border-blue-200 hover:bg-blue-50 text-blue-700 font-bold rounded-xl border-dashed border-2"
+            >
+              {testLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Probando conexión...
+                </>
+              ) : (
+                <>
+                  <Mail className="w-4 h-4 mr-2" />
+                  Verificar Configuración SMTP (Enviar Correo Prueba)
+                </>
+              )}
+            </Button>
           </div>
         </div>
 

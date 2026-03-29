@@ -12,13 +12,20 @@ export async function sendEventAssignmentEmail({ staff, event }) {
     return
   }
 
+  const smtpPass = process.env.SMTP_PASS ? process.env.SMTP_PASS.replace(/\s+/g, "") : ""
+  const isGmail = process.env.SMTP_HOST?.includes("gmail.com")
+
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || "587"),
-    secure: process.env.SMTP_SECURE === "true",
+    ...(isGmail
+      ? { service: "gmail" }
+      : {
+          host: process.env.SMTP_HOST,
+          port: parseInt(process.env.SMTP_PORT || "587"),
+          secure: process.env.SMTP_SECURE === "true",
+        }),
     auth: {
       user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      pass: smtpPass,
     },
   })
   if (!staff.email) {
@@ -76,7 +83,6 @@ export async function sendEventAssignmentEmail({ staff, event }) {
 
 /**
  * Envía una notificación a la institución cuando se solicita una nueva cita
- * @param {string} institutionalEmail - Correo de la institución
  * @param {Object} appointment - Nueva cita con patientName, patientEmail, patientPhone, type, dateTime, notes
  */
 export async function sendAppointmentNotificationEmail({ institutionalEmail, appointment }) {
@@ -97,13 +103,20 @@ export async function sendAppointmentNotificationEmail({ institutionalEmail, app
     return
   }
 
+  const smtpPass = process.env.SMTP_PASS ? process.env.SMTP_PASS.replace(/\s+/g, "") : ""
+  const isGmail = process.env.SMTP_HOST?.includes("gmail.com")
+
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || "587"),
-    secure: process.env.SMTP_SECURE === "true",
+    ...(isGmail
+      ? { service: "gmail" }
+      : {
+          host: process.env.SMTP_HOST,
+          port: parseInt(process.env.SMTP_PORT || "587"),
+          secure: process.env.SMTP_SECURE === "true",
+        }),
     auth: {
       user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      pass: smtpPass,
     },
   })
 
